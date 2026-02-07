@@ -1,0 +1,16 @@
+FROM php:8.4-apache
+
+# PHP extensions you will need for MySQL + common stuff
+RUN docker-php-ext-install pdo pdo_mysql mysqli
+
+# Enable Apache rewrite
+RUN a2enmod rewrite
+
+# Serve /public as the web root (keeps /includes out of the URL space)
+ENV APACHE_DOCUMENT_ROOT=/var/www/app/public
+
+# Update Apache config to use the new DocumentRoot
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+ && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+WORKDIR /var/www/app

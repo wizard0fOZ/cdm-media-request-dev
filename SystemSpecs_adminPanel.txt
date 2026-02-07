@@ -1,0 +1,458 @@
+Below is a full **system spec** for the **Admin Panel** (CDM Media Request System admin app). It covers: dashboard, request tabs, request view, approve/reject per service, content calendar, and admin/settings.
+
+---
+
+## 1) Admin panel overview
+
+### Purpose
+
+* One place for **reviewing requests**, **approving services**, **assigning people**, **tracking progress**, and **planning content posting**.
+
+### User roles (MVP)
+
+* **Super Admin**: full access, manage users, settings, lookup tables
+* **Coordinator**: can approve/reject, assign, edit schedules, manage statuses
+* **Service Lead (AV / Media / Photo)**: can approve/reject only their service, update tasks
+* **Viewer**: read-only
+
+### Core modules (tabs)
+
+1. **Dashboard**
+2. **Requests**
+3. **Calendar (Events)**
+4. **Content Calendar**
+5. **Reports**
+6. **Admin / Settings**
+
+---
+
+## 2) Dashboard spec
+
+### Goals
+
+* Immediate visibility of what needs attention today and this week.
+* Quick triage: late requests, pending approvals, upcoming events, blocked items.
+
+### Dashboard sections
+
+1. **Top KPI cards**
+
+   * Pending requests (overall)
+   * Pending AV approvals
+   * Pending Media approvals
+   * Pending Photo approvals
+   * Late submissions (under 14 days)
+   * Events in next 7 days
+
+2. **Action queue (most important)**
+
+   * “Needs approval” list (sorted by soonest event date)
+   * “Blocked” list (missing approvals, missing reference links, missing info)
+   * “Overdue tasks” list (if you implement task deadlines)
+
+3. **Upcoming events list**
+
+   * Next 10 events with time, location note, services selected
+   * Badge colors: Pending, Approved, In progress, Completed
+
+4. **Content pipeline snapshot**
+
+   * Draft
+   * In design
+   * Awaiting approval
+   * Scheduled
+   * Published
+
+### Dashboard actions
+
+* One-click open request
+* Quick assign PIC dropdown
+* Quick approve/reject (role-gated)
+* Quick “Request more info” template message
+
+---
+
+## 3) Requests tab spec
+
+### Default view
+
+A table with strong filters.
+
+### Table columns (recommended)
+
+* Reference No (MR-YYYY-####)
+* Event Name
+* Event date range (computed)
+* Schedule type (single/recurring/custom)
+* Services requested (AV/Media/Photo badges)
+* Status (overall)
+* Lead days badge (Late if < 14)
+* Created date
+* Assigned coordinator
+
+### Filters
+
+* Status: Pending, Approved, In progress, Completed, Rejected, Cancelled
+* Service: AV / Media / Photo
+* Late only toggle
+* Date range (event date)
+* Ministry
+* Assigned user
+* Search (ref no, event name, requestor)
+
+### Bulk actions (optional MVP+)
+
+* Assign to user
+* Mark as reviewed
+* Export CSV
+
+---
+
+## 4) Request detail view spec (the most important page)
+
+### Layout
+
+Two-column layout:
+
+* **Left: Request info**
+* **Right: Workflow + actions**
+
+---
+
+### 4.1 Request info block
+
+* Requestor: name, ministry, phone, email
+* Event: name, description, location note
+* Schedule summary:
+
+  * Single: date + time
+  * Recurring: start/end + pattern/day
+  * Custom list: list + earliest date shown
+* Late flag info (lead days)
+* Reference link + notes (clickable)
+* Attachments (if you add uploads later)
+
+---
+
+### 4.2 Service blocks (AV / Media / Photo)
+
+Each service block behaves independently.
+
+#### Common fields per service
+
+* Service status:
+
+  * Pending review
+  * Approved
+  * Rejected
+  * Needs more info
+  * In progress
+  * Completed
+* Assigned PIC (dropdown)
+* Internal notes
+* Decision log (who approved, when, reason)
+
+#### Service decision actions
+
+* Approve
+* Reject
+* Request more info
+
+Each action must store:
+
+* `status`
+* `decided_by`
+* `decided_at`
+* `reason/note`
+
+---
+
+### 4.3 AV service detail block
+
+Show:
+
+* Selected rooms
+* Requested equipment items and quantities
+* Rehearsal info
+* AV note
+
+Extra AV actions (optional but useful)
+
+* “Confirm inventory” checkbox
+* “Mark setup scheduled”
+* “Assign setup team” (optional)
+
+Validation in admin side:
+
+* If AV approved, at least one room should exist
+
+---
+
+### 4.4 Media service detail block
+
+Show:
+
+* Media description
+* Platforms requested
+* Promo start/end dates
+* Caption details
+* Notes
+
+Media actions:
+
+* “Generate content items” button (creates content calendar entries)
+* “Assign designer” (PIC)
+* “Mark awaiting approval”
+* “Mark scheduled”
+* “Mark published”
+
+---
+
+### 4.5 Photo service detail block
+
+Show:
+
+* Date/time requested
+* Notes
+* Assigned photographer
+* Status tracking
+
+---
+
+### 4.6 Overall request status logic (important)
+
+Overall request status is derived from services:
+
+* **Pending**: any selected service still pending review
+* **Approved**: all selected services approved (or at least not rejected, depends on your policy)
+* **In progress**: any service in progress
+* **Completed**: all selected services completed
+* **Rejected**: all selected services rejected OR request cancelled
+
+You need a clear rule:
+
+* If Media rejected but AV approved, request is not “Rejected”, it’s “Partially approved”.
+
+So add:
+
+* `overall_status`
+* `approval_state`: Approved, Partially approved, Rejected
+
+---
+
+## 5) Approve / Reject flow spec
+
+### Approve
+
+* Updates service_status to Approved
+* Requires optional internal note
+* Writes audit log
+
+### Reject
+
+* Requires reason
+* Writes audit log
+* Marks service_status Rejected
+* Optional: auto notify requestor (email later)
+
+### Request more info
+
+* Sets status “Needs more info”
+* Adds note (question)
+* Optional: store `requested_info_at`
+
+---
+
+## 6) Event Calendar tab (Ops calendar)
+
+### Views
+
+* Month view
+* Week view
+* Agenda list
+
+### What is plotted
+
+* Each event occurrence (single date, each custom date, generated recurring occurrences)
+
+### Filters
+
+* Service type badges
+* Only approved
+* Only pending
+* Show late
+
+### Clicking an event
+
+* Opens request detail
+* Shows schedule breakdown
+
+---
+
+## 7) Content Calendar tab (media pipeline calendar)
+
+### Purpose
+
+Tracks content publishing, not event dates.
+
+### Entity: Content Item
+
+Each content item represents:
+
+* 1 platform + 1 post asset + 1 planned publish date
+
+### Views
+
+* Calendar view (month/week)
+* List view (sortable)
+
+### Content calendar fields
+
+* Content title (default: Event name, editable)
+* Linked request (MR ref)
+* Platform (Instagram, FB, Telegram, etc.)
+* Publish datetime
+* Status:
+
+  * Draft
+  * In design
+  * Awaiting approval
+  * Scheduled
+  * Published
+  * Cancelled
+* Assigned PIC (designer/editor)
+* Assets link (drive link, optional)
+* Caption / copy (optional)
+* Notes
+
+### Actions
+
+* Create content item
+* Bulk create from request (one per selected platform)
+* Edit scheduled date/time
+* Change status (kanban style optional)
+* Mark published (auto sets published_at)
+* Duplicate content item (for cross-posting)
+
+### Must-have filters
+
+* Platform
+* Status
+* Assigned PIC
+* Date range
+* Search by event / ref
+
+---
+
+## 8) Reports tab (basic but useful)
+
+### Reports (starter)
+
+* Requests by month
+* Requests by ministry
+* Service volume (AV vs Media vs Photo)
+* Late submissions count
+* Media output count (published content items)
+
+### Export
+
+* CSV export per report
+
+---
+
+## 9) Admin / Settings tab
+
+### 9.1 User management
+
+* Create user
+* Disable user
+* Role assignment
+* Reset password (or manual password set)
+* Audit logs per user
+
+### 9.2 Lookup data management
+
+* Rooms (active/inactive)
+* Equipment (active/inactive)
+* Room equipment mapping, qty available
+* Service categories (if you expand)
+* Platform list (FB, IG, etc.)
+
+### 9.3 System rules
+
+* Lead time threshold (default 14 days)
+* Default statuses
+* Reference link requirement toggle (optional)
+* Email notification toggles (future)
+* Request numbering format
+
+### 9.4 Templates
+
+* Approval email templates
+* Rejection templates
+* “Request more info” templates
+
+### 9.5 Audit logs
+
+* Filterable view:
+
+  * date range
+  * entity (request, service, content)
+  * user
+  * action type
+
+---
+
+## 10) Technical requirements (admin app)
+
+### Authentication
+
+* Session-based login
+* Role-based authorization for actions
+* CSRF protection
+
+### Performance
+
+* Index by:
+
+  * request reference number
+  * event start date
+  * service statuses
+  * publish datetime for content items
+
+### Data integrity
+
+* Use transactions when:
+
+  * approving services
+  * generating content items
+  * updating schedule occurrences
+
+### Minimum audit log fields
+
+* action
+* entity_type
+* entity_id
+* changed_fields (json)
+* performed_by
+* performed_at
+* ip (optional)
+
+---
+
+## 11) MVP build order (practical)
+
+1. Requests table + filters
+2. Request detail page
+3. Service approve/reject + assign PIC
+4. Event Calendar (agenda list first, then month)
+5. Content Calendar list view (then calendar view)
+6. Admin settings (rooms/equipment + users)
+
+---
+
+If you want, I can turn this into:
+
+* a **database schema checklist** (tables + columns),
+* a **folder structure** for admin app pages,
+* or a **screen-by-screen UI wireframe list** that you can follow while coding.
