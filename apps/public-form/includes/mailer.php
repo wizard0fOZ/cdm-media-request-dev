@@ -26,15 +26,22 @@ function createMailer(): ?PHPMailer {
         // Server settings
         $mail->isSMTP();
         $mail->Host = $_ENV['SMTP_HOST'] ?? 'localhost';
-        $mail->SMTPAuth = true;
-        $mail->Username = $_ENV['SMTP_USER'] ?? '';
-        $mail->Password = $_ENV['SMTP_PASS'] ?? '';
 
-        $secure = $_ENV['SMTP_SECURE'] ?? 'ssl';
+        $smtpUser = $_ENV['SMTP_USER'] ?? '';
+        $smtpPass = $_ENV['SMTP_PASS'] ?? '';
+        $smtpAuthEnv = strtolower((string)($_ENV['SMTP_AUTH'] ?? ''));
+        $mail->SMTPAuth = $smtpAuthEnv === 'true' || ($smtpUser !== '' || $smtpPass !== '');
+        $mail->Username = $smtpUser;
+        $mail->Password = $smtpPass;
+
+        $secure = strtolower((string)($_ENV['SMTP_SECURE'] ?? 'ssl'));
         if ($secure === 'ssl') {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        } elseif ($secure === 'tls') {
+        } elseif ($secure === 'tls' || $secure === 'starttls') {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        } else {
+            $mail->SMTPSecure = '';
+            $mail->SMTPAutoTLS = false;
         }
 
         $mail->Port = (int)($_ENV['SMTP_PORT'] ?? 465);

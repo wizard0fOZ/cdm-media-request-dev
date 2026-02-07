@@ -16,7 +16,7 @@ if (file_exists($autoloadPath)) {
 
 // Database configuration - use .env values or fallback to defaults
 define('DB_HOST', $_ENV['DB_HOST'] ?? 'mysql');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'appdb');
+define('DB_NAME', $_ENV['DB_NAME'] ?? 'appdb_dev');
 define('DB_USER', $_ENV['DB_USER'] ?? 'appuser');
 define('DB_PASS', $_ENV['DB_PASS'] ?? 'apppass123');
 define('DB_PORT', (int)($_ENV['DB_PORT'] ?? 3306));
