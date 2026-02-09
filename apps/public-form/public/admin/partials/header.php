@@ -84,7 +84,6 @@ $_currentPage = basename($_SERVER['SCRIPT_NAME'], '.php');
         ['page' => 'index',    'label' => 'Dashboard',  'icon' => 'fa-table-list',     'roles' => ROLES_ALL],
         ['page' => 'calendar', 'label' => 'Calendar',   'icon' => 'fa-calendar-days',  'roles' => ROLES_ALL],
         ['page' => 'content',  'label' => 'Content',    'icon' => 'fa-newspaper',      'roles' => ROLES_ALL],
-        ['page' => 'reports',  'label' => 'Reports',    'icon' => 'fa-chart-bar',      'roles' => ROLES_ALL],
         ['page' => 'settings', 'label' => 'Settings',   'icon' => 'fa-gear',           'roles' => ROLES_ADMIN_SETTINGS],
       ];
       foreach ($navItems as $nav):
