@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
 
 // If already logged in, redirect to dashboard
@@ -10,18 +9,42 @@ if (is_authenticated()) {
   exit;
 }
 
+require_once __DIR__ . '/../includes/db.php';
+
 $error = '';
 
 // Handle login form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $email    = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
 
-  if ($password === ADMIN_PASSWORD) {
-    $_SESSION['admin_authenticated'] = true;
-    header('Location: index.php');
-    exit;
+  if ($email === '' || $password === '') {
+    $error = 'Please enter your email and password.';
   } else {
-    $error = 'Invalid password. Please try again.';
+    $stmt = $pdo->prepare("SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = :email LIMIT 1");
+    $stmt->execute([':email' => $email]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+      $error = 'Invalid email or password.';
+    } elseif (!$user['is_active']) {
+      $error = 'Your account has been deactivated. Contact your administrator.';
+    } elseif (!password_verify($password, $user['password_hash'])) {
+      $error = 'Invalid email or password.';
+    } else {
+      // Successful login — store user info in session
+      $_SESSION['user_id']    = (int)$user['id'];
+      $_SESSION['user_name']  = $user['name'];
+      $_SESSION['user_email'] = $user['email'];
+      $_SESSION['user_role']  = $user['role'];
+
+      // Update last_login_at
+      $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = :id")
+          ->execute([':id' => $user['id']]);
+
+      header('Location: index.php');
+      exit;
+    }
   }
 }
 
@@ -91,8 +114,32 @@ $pageTitle = "Admin Login | CDM";
       <?php endif; ?>
 
       <!-- Login Form -->
-      <form method="POST" action="login.php">
-        <div class="mb-6" x-data="{ show: false }">
+      <form method="POST" action="login.php" x-data="{ show: false }">
+        <!-- Email -->
+        <div class="mb-4">
+          <label for="email" class="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-200">
+            Email
+          </label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <i class="fa-solid fa-envelope text-slate-400 dark:text-slate-500"></i>
+            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autofocus
+              autocomplete="email"
+              value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-3 text-slate-900 dark:text-slate-100 transition focus:border-slate-900 dark:focus:border-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
+              placeholder="you@church.my"
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-6">
           <label for="password" class="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-200">
             Password
           </label>
@@ -105,10 +152,9 @@ $pageTitle = "Admin Login | CDM";
               id="password"
               name="password"
               required
-              autofocus
               autocomplete="current-password"
               class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-10 text-slate-900 dark:text-slate-100 transition focus:border-slate-900 dark:focus:border-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
-              placeholder="Enter admin password"
+              placeholder="Enter your password"
             />
             <button
               type="button"

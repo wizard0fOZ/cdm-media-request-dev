@@ -4,8 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth.php';
 require_admin_auth();
 
-require_once __DIR__ . '/../../includes/db.php';
-require_once __DIR__ . '/../../includes/mailer.php';
+require_once __DIR__ . '/../../../includes/db.php';
+require_once __DIR__ . '/../../../includes/mailer.php';
 
 // Helper to get IP address
 function get_ip(): string {
