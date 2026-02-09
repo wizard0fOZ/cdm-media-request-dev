@@ -522,7 +522,7 @@ CREATE TABLE `users` (
   `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(190) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `role` enum('office_admin','media_head','media_asst','media_member','designer_head','designer_asst','designer_member','av_head','av_asst','av_member','sysadmin') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'media_member',
+  `role` enum('sysadmin','media_head','media_asst','designer_head','designer_asst','av_head','av_asst','photo_lead') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `last_login_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -535,15 +535,12 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role`, `is_active`, `last_login_at`, `created_at`, `updated_at`) VALUES
 (1,	'System Admin',	'sysadmin@church.my',	'__BCRYPT_HASH__',	'sysadmin',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(2,	'Office Admin',	'office.admin@church.my',	'__BCRYPT_HASH__',	'office_admin',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(3,	'Media Head',	'media.head@church.my',	'__BCRYPT_HASH__',	'media_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(4,	'Media Asst Head',	'media.asst@church.my',	'__BCRYPT_HASH__',	'media_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(5,	'Media Member A',	'media.member1@church.my',	'__BCRYPT_HASH__',	'media_member',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(6,	'Designer Head',	'designer.head@church.my',	'__BCRYPT_HASH__',	'designer_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(7,	'Designer Asst Head',	'designer.asst@church.my',	'__BCRYPT_HASH__',	'designer_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(8,	'Designer Member A',	'designer.member1@church.my',	'__BCRYPT_HASH__',	'designer_member',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(9,	'AV Head',	'av.head@church.my',	'__BCRYPT_HASH__',	'av_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(10,	'AV Asst Head',	'av.asst@church.my',	'__BCRYPT_HASH__',	'av_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(11,	'AV Member A',	'av.member1@church.my',	'__BCRYPT_HASH__',	'av_member',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54');
+(2,	'Media Ministry Head',	'media.head@church.my',	'__BCRYPT_HASH__',	'media_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(3,	'Media Ministry Asst Head',	'media.asst@church.my',	'__BCRYPT_HASH__',	'media_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(4,	'Designer Head',	'designer.head@church.my',	'__BCRYPT_HASH__',	'designer_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(5,	'Designer Asst Head',	'designer.asst@church.my',	'__BCRYPT_HASH__',	'designer_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(6,	'AV Head',	'av.head@church.my',	'__BCRYPT_HASH__',	'av_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(7,	'AV Asst Head',	'av.asst@church.my',	'__BCRYPT_HASH__',	'av_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(8,	'Photography Lead',	'photo.lead@church.my',	'__BCRYPT_HASH__',	'photo_lead',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54');
 
 -- 2026-01-31 15:16:28 UTC

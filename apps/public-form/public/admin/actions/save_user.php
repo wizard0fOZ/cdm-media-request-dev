@@ -15,10 +15,11 @@ $user   = current_user();
 $action = $_POST['action'] ?? '';
 
 $validRoles = [
-    'sysadmin', 'office_admin',
-    'media_head', 'media_asst', 'media_member',
-    'designer_head', 'designer_asst', 'designer_member',
-    'av_head', 'av_asst', 'av_member',
+    'sysadmin',
+    'media_head', 'media_asst',
+    'designer_head', 'designer_asst',
+    'av_head', 'av_asst',
+    'photo_lead',
 ];
 
 $redirect = '../settings.php?tab=users';

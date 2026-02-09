@@ -84,10 +84,11 @@ $currentUserId = (int) current_user()['id'];
 
 // Valid roles for user modal
 $validRoles = [
-    'sysadmin', 'office_admin',
-    'media_head', 'media_asst', 'media_member',
-    'designer_head', 'designer_asst', 'designer_member',
-    'av_head', 'av_asst', 'av_member',
+    'sysadmin',
+    'media_head', 'media_asst',
+    'designer_head', 'designer_asst',
+    'av_head', 'av_asst',
+    'photo_lead',
 ];
 
 $pageTitle = "Settings | CDM Media Admin";

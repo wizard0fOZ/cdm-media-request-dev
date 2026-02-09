@@ -58,26 +58,27 @@ function require_role(array $roles): void {
 define('ROLES_FULL_ACCESS', ['sysadmin']);
 
 /** Roles that can approve/reject any service and assign any PIC. */
-define('ROLES_COORDINATOR', ['sysadmin', 'office_admin']);
+define('ROLES_COORDINATOR', ['sysadmin', 'media_head', 'media_asst']);
 
 /** Roles that can approve/reject AV service. */
-define('ROLES_AV_APPROVE', ['sysadmin', 'office_admin', 'av_head', 'av_asst']);
+define('ROLES_AV_APPROVE', ['sysadmin', 'media_head', 'media_asst', 'av_head', 'av_asst']);
 
 /** Roles that can approve/reject Media/Design service. */
-define('ROLES_MEDIA_APPROVE', ['sysadmin', 'office_admin', 'media_head', 'media_asst', 'designer_head', 'designer_asst']);
+define('ROLES_MEDIA_APPROVE', ['sysadmin', 'media_head', 'media_asst', 'designer_head', 'designer_asst']);
 
 /** Roles that can approve/reject Photo service. */
-define('ROLES_PHOTO_APPROVE', ['sysadmin', 'office_admin', 'media_head', 'media_asst']);
+define('ROLES_PHOTO_APPROVE', ['sysadmin', 'media_head', 'media_asst', 'photo_lead']);
 
 /** Roles that can manage admin settings (users, rooms, equipment). */
 define('ROLES_ADMIN_SETTINGS', ['sysadmin']);
 
 /** All roles that have at least dashboard + view access. */
 define('ROLES_ALL', [
-  'sysadmin', 'office_admin',
-  'media_head', 'media_asst', 'media_member',
-  'designer_head', 'designer_asst', 'designer_member',
-  'av_head', 'av_asst', 'av_member',
+  'sysadmin',
+  'media_head', 'media_asst',
+  'designer_head', 'designer_asst',
+  'av_head', 'av_asst',
+  'photo_lead',
 ]);
 
 /**
@@ -113,7 +114,7 @@ function can_assign_pic(string $serviceType): bool {
   return match ($serviceType) {
     'av'    => in_array($role, ['av_head', 'av_asst'], true),
     'media' => in_array($role, ['media_head', 'media_asst', 'designer_head', 'designer_asst'], true),
-    'photo' => in_array($role, ['media_head', 'media_asst'], true),
+    'photo' => in_array($role, ['media_head', 'media_asst', 'photo_lead'], true),
     default => false,
   };
 }
@@ -132,16 +133,13 @@ function can_manage_settings(): bool {
 function role_label(string $role): string {
   return match ($role) {
     'sysadmin'        => 'System Admin',
-    'office_admin'    => 'Office Admin',
-    'media_head'      => 'Media Head',
-    'media_asst'      => 'Media Asst. Head',
-    'media_member'    => 'Media Member',
+    'media_head'      => 'Media Ministry Head',
+    'media_asst'      => 'Media Ministry Asst. Head',
     'designer_head'   => 'Designer Head',
     'designer_asst'   => 'Designer Asst. Head',
-    'designer_member' => 'Designer Member',
     'av_head'         => 'AV Head',
     'av_asst'         => 'AV Asst. Head',
-    'av_member'       => 'AV Member',
+    'photo_lead'      => 'Photography Lead',
     default           => ucfirst(str_replace('_', ' ', $role)),
   };
 }
