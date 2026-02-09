@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth.php';
 require_admin_auth();
 require_once __DIR__ . '/../../../includes/db.php';
+require_once __DIR__ . '/../../../includes/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -81,6 +82,16 @@ try {
     error_log('reject_service error: ' . $ex->getMessage());
     http_response_code(500);
     exit('An error occurred');
+}
+
+// Send rejection email when overall status becomes 'rejected'
+if ($overall === 'rejected') {
+    $stmt = $pdo->prepare('SELECT requestor_name, email, reference_no, event_name FROM media_requests WHERE id = :id');
+    $stmt->execute(['id' => $requestId]);
+    $reqData = $stmt->fetch();
+    if ($reqData) {
+        sendRejectionEmail($reqData, $reason);
+    }
 }
 
 header('Location: ../view.php?id=' . $requestId . '&success=1');

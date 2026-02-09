@@ -172,3 +172,29 @@ function sendRejectionEmail(array $request, string $reason): bool {
         $body
     );
 }
+
+/**
+ * Send "needs more info" email to requestor
+ */
+function sendNeedsMoreInfoEmail(array $request, string $serviceType, string $question): bool {
+    $serviceLabel = match ($serviceType) {
+        'av'    => 'AV Support',
+        'media' => 'Poster/Media Design',
+        'photo' => 'Photography',
+        default => ucfirst($serviceType),
+    };
+
+    $body = loadEmailTemplate('needs_more_info', [
+        'requestor_name' => $request['requestor_name'],
+        'reference_no'   => $request['reference_no'],
+        'event_name'     => $request['event_name'],
+        'service_label'  => $serviceLabel,
+        'question'       => $question,
+    ]);
+
+    return sendEmail(
+        $request['email'],
+        "More Information Needed - {$request['reference_no']}",
+        $body
+    );
+}

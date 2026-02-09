@@ -534,13 +534,13 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role`, `is_active`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1,	'System Admin',	'sysadmin@church.my',	'__BCRYPT_HASH__',	'sysadmin',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(2,	'Media Ministry Head',	'media.head@church.my',	'__BCRYPT_HASH__',	'media_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(3,	'Media Ministry Asst Head',	'media.asst@church.my',	'__BCRYPT_HASH__',	'media_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(4,	'Designer Head',	'designer.head@church.my',	'__BCRYPT_HASH__',	'designer_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(5,	'Designer Asst Head',	'designer.asst@church.my',	'__BCRYPT_HASH__',	'designer_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(6,	'AV Head',	'av.head@church.my',	'__BCRYPT_HASH__',	'av_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(7,	'AV Asst Head',	'av.asst@church.my',	'__BCRYPT_HASH__',	'av_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
-(8,	'Photography Lead',	'photo.lead@church.my',	'__BCRYPT_HASH__',	'photo_lead',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54');
+(1,	'Osmund Raj',	'sysadmin@church.my',	'__BCRYPT_HASH__',	'sysadmin',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(2,	'Daniel Lim',	'media.head@church.my',	'__BCRYPT_HASH__',	'media_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(3,	'Sarah Tan',	'media.asst@church.my',	'__BCRYPT_HASH__',	'media_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(4,	'Rachel Wong',	'designer.head@church.my',	'__BCRYPT_HASH__',	'designer_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(5,	'Marcus Lee',	'designer.asst@church.my',	'__BCRYPT_HASH__',	'designer_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(6,	'Joshua Ng',	'av.head@church.my',	'__BCRYPT_HASH__',	'av_head',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(7,	'Timothy Chen',	'av.asst@church.my',	'__BCRYPT_HASH__',	'av_asst',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54'),
+(8,	'Grace Fernandez',	'photo.lead@church.my',	'__BCRYPT_HASH__',	'photo_lead',	1,	NULL,	'2026-01-10 23:55:54',	'2026-01-10 23:55:54');
 
 -- 2026-01-31 15:16:28 UTC

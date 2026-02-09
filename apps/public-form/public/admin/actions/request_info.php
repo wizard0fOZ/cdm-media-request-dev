@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth.php';
 require_admin_auth();
 require_once __DIR__ . '/../../../includes/db.php';
+require_once __DIR__ . '/../../../includes/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -77,6 +78,14 @@ try {
     error_log('request_info error: ' . $ex->getMessage());
     http_response_code(500);
     exit('An error occurred');
+}
+
+// Send "needs more info" email to requestor (after commit, don't block on failure)
+$stmt = $pdo->prepare('SELECT requestor_name, email, reference_no, event_name FROM media_requests WHERE id = :id');
+$stmt->execute(['id' => $requestId]);
+$reqData = $stmt->fetch();
+if ($reqData) {
+    sendNeedsMoreInfoEmail($reqData, $serviceType, $note);
 }
 
 header('Location: ../view.php?id=' . $requestId . '&success=1');

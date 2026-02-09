@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth.php';
 require_admin_auth();
 require_once __DIR__ . '/../../../includes/db.php';
+require_once __DIR__ . '/../../../includes/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -73,6 +74,27 @@ try {
     error_log('approve_service error: ' . $ex->getMessage());
     http_response_code(500);
     exit('An error occurred');
+}
+
+// Send approval email when overall status becomes 'approved'
+if ($overall === 'approved') {
+    $stmt = $pdo->prepare('
+        SELECT mr.requestor_name, mr.email, mr.reference_no, mr.event_name,
+               es.start_date, es.end_date
+        FROM media_requests mr
+        LEFT JOIN event_schedules es ON mr.id = es.media_request_id
+        WHERE mr.id = :id
+    ');
+    $stmt->execute(['id' => $requestId]);
+    $reqData = $stmt->fetch();
+    if ($reqData) {
+        $eventDates = $reqData['start_date'] ?? '';
+        if (!empty($reqData['end_date']) && $reqData['end_date'] !== $reqData['start_date']) {
+            $eventDates .= ' to ' . $reqData['end_date'];
+        }
+        $reqData['event_dates'] = $eventDates;
+        sendApprovalEmail($reqData);
+    }
 }
 
 header('Location: ../view.php?id=' . $requestId . '&success=1');
