@@ -150,6 +150,185 @@ $svcConfig = [
     'photo' => ['label' => 'Photography',          'icon' => 'fa-camera',     'color' => 'blue'],
 ];
 
+// ─── WhatsApp copy text builder ─────────────────────────────────────────────
+$waSep = str_repeat('─', 20);
+$waStatusEmojis = ['approved' => '✅', 'rejected' => '❌', 'pending_info' => '❓'];
+$waGetStatus = fn(string $s): string => $waStatusEmojis[$s] ?? '⏳';
+
+// Build schedule lines once (reused in each service block)
+$waScheduleLines = [];
+if ($schedule) {
+    if ($schedule['schedule_type'] === 'recurring') {
+        $waScheduleLines[] = '📆 ' . ucfirst($schedule['recurrence_pattern']) . ' on ' . $schedule['recurrence_days_of_week'];
+        $waScheduleLines[] = '   ' . date('M j, Y', strtotime($schedule['start_date'])) . ' – ' . date('M j, Y', strtotime($schedule['end_date']));
+        if ($schedule['start_time']) {
+            $waScheduleLines[] = '   ' . $schedule['start_time'] . ' – ' . $schedule['end_time'];
+        }
+    } elseif ($schedule['schedule_type'] === 'custom_list') {
+        $waScheduleLines[] = '📆 Specific dates:';
+        foreach ($occurrences as $occ) {
+            $line = '   • ' . date('M j, Y', strtotime($occ['occurrence_date']));
+            if ($occ['start_time']) {
+                $line .= '  ' . $occ['start_time'] . ' – ' . $occ['end_time'];
+            }
+            $waScheduleLines[] = $line;
+        }
+    } else {
+        $line = '📆 ' . date('M j, Y', strtotime($schedule['start_date']));
+        if ($schedule['start_time']) {
+            $line .= '  ' . $schedule['start_time'] . ' – ' . $schedule['end_time'];
+        }
+        $waScheduleLines[] = $line;
+    }
+}
+
+// Full summary
+$waFull  = "📥 *New Media Request*\n";
+$waFull .= $waSep . "\n";
+$waFull .= "🔖 *Ref:* " . $request['reference_no'] . "\n";
+if ($request['is_late']) {
+    $waFull .= "⚠️ _Late submission (" . $request['lead_days'] . "d notice)_\n";
+}
+$waFull .= "\n";
+$waFull .= "👤 *Requester*\n";
+$waFull .= "• " . $request['requestor_name'] . "\n";
+if ($request['ministry']) $waFull .= "• " . $request['ministry'] . "\n";
+$waFull .= "• 📱 " . $request['contact_no'] . "\n";
+$waFull .= "\n";
+$waFull .= "📅 *Event: " . $request['event_name'] . "*\n";
+foreach ($waScheduleLines as $line) {
+    $waFull .= $line . "\n";
+}
+if ($request['event_location_note']) {
+    $waFull .= "📍 " . $request['event_location_note'] . "\n";
+}
+if ($request['event_description']) {
+    $waFull .= "_" . $request['event_description'] . "_\n";
+}
+$waFull .= "\n";
+$waFull .= "🛎️ *Services:*\n";
+foreach ($serviceTypes as $st) {
+    $svcEmoji = match($st['type']) { 'av' => '🎛️', 'media' => '🎨', 'photo' => '📸', default => '📋' };
+    $svcLabel = $svcConfig[$st['type']]['label'] ?? ucfirst($st['type']);
+    $waFull .= $svcEmoji . " " . $svcLabel . " " . $waGetStatus($st['approval_status']) . "\n";
+}
+$waFull .= "\n" . $waSep;
+
+// AV summary
+$waAV = '';
+if (in_array('av', $services) && $avDetails) {
+    $waAV  = "🎛️ *AV Support*\n";
+    $waAV .= $waSep . "\n";
+    $waAV .= "🔖 *Ref:* " . $request['reference_no'] . "\n";
+    $waAV .= "🎉 *Event:* " . $request['event_name'] . "\n";
+    foreach ($waScheduleLines as $line) {
+        $waAV .= $line . "\n";
+    }
+    if ($request['event_location_note']) {
+        $waAV .= "📍 *Venue:* " . $request['event_location_note'] . "\n";
+    }
+    if ($request['event_description']) {
+        $waAV .= "_" . $request['event_description'] . "_\n";
+    }
+    if (!empty($avRooms)) {
+        $waAV .= "🏢 *Room(s):* " . implode(', ', $avRooms) . "\n";
+    }
+    if (!empty($avItems)) {
+        $waAV .= "\n🔧 *Equipment:*\n";
+        foreach ($avItems as $item) {
+            $line = "• " . $item['name'] . " ×" . $item['quantity'];
+            if ($item['room_name']) $line .= " (" . $item['room_name'] . ")";
+            if ($item['note']) $line .= " — " . $item['note'];
+            $waAV .= $line . "\n";
+        }
+    }
+    if ($avDetails['rehearsal_date']) {
+        $rehDate = date('M j, Y', strtotime($avDetails['rehearsal_date']));
+        $rehTime = '';
+        if ($avDetails['rehearsal_start_time']) {
+            $rehTime = '  ' . $avDetails['rehearsal_start_time'] . ' – ' . $avDetails['rehearsal_end_time'];
+        }
+        $waAV .= "\n🎭 *Rehearsal:* " . $rehDate . $rehTime . "\n";
+    } else {
+        $waAV .= "\n🎭 *Rehearsal:* Not required\n";
+    }
+    if ($avDetails['note']) {
+        $waAV .= "\n📝 *Additional Requests:*\n" . $avDetails['note'] . "\n";
+    }
+    $waAV .= "\n" . $waSep;
+}
+
+// Media / Poster summary
+$waMedia = '';
+if (in_array('media', $services) && $mediaDetails) {
+    $waMedia  = "🎨 *Poster / Video Design*\n";
+    $waMedia .= $waSep . "\n";
+    $waMedia .= "🔖 *Ref:* " . $request['reference_no'] . "\n";
+    $waMedia .= "🎉 *Event:* " . $request['event_name'] . "\n";
+    foreach ($waScheduleLines as $line) {
+        $waMedia .= $line . "\n";
+    }
+    if ($request['event_description']) {
+        $waMedia .= "_" . $request['event_description'] . "_\n";
+    }
+    if (!empty($mediaPlatforms)) {
+        $platformLabels = [];
+        foreach ($mediaPlatforms as $p) {
+            $lbl = ucfirst($p['platform']);
+            if ($p['platform'] === 'other' && $p['platform_other_label']) $lbl = $p['platform_other_label'];
+            $platformLabels[] = $lbl;
+        }
+        $waMedia .= "\n📲 *Platforms:* " . implode(', ', $platformLabels) . "\n";
+    }
+    if ($mediaDetails['promo_start_date']) {
+        $promoRange = date('M j, Y', strtotime($mediaDetails['promo_start_date']));
+        if ($mediaDetails['promo_end_date']) {
+            $promoRange .= ' – ' . date('M j, Y', strtotime($mediaDetails['promo_end_date']));
+        }
+        $waMedia .= "📅 *Promo Period:* " . $promoRange . "\n";
+    }
+    if ($mediaDetails['description']) {
+        $waMedia .= "\n📝 *Details:*\n" . $mediaDetails['description'] . "\n";
+    }
+    if ($mediaDetails['caption_details']) {
+        $waMedia .= "\n✏️ *Caption:*\n" . $mediaDetails['caption_details'] . "\n";
+    }
+    if ($mediaDetails['note']) {
+        $waMedia .= "\n💬 *Notes:*\n" . $mediaDetails['note'] . "\n";
+    }
+    $waMedia .= "\n" . $waSep;
+}
+
+// Photo summary
+$waPhoto = '';
+if (in_array('photo', $services) && $photoDetails) {
+    $waPhoto  = "📸 *Photography*\n";
+    $waPhoto .= $waSep . "\n";
+    $waPhoto .= "🔖 *Ref:* " . $request['reference_no'] . "\n";
+    $waPhoto .= "🎉 *Event:* " . $request['event_name'] . "\n";
+    foreach ($waScheduleLines as $line) {
+        $waPhoto .= $line . "\n";
+    }
+    if ($request['event_description']) {
+        $waPhoto .= "_" . $request['event_description'] . "_\n";
+    }
+    if ($photoDetails['needed_date']) {
+        $photoDate = date('M j, Y', strtotime($photoDetails['needed_date']));
+        if ($photoDetails['start_time']) {
+            $photoDate .= '  ' . $photoDetails['start_time'] . ' – ' . $photoDetails['end_time'];
+        }
+        $waPhoto .= "📅 *Date Needed:* " . $photoDate . "\n";
+    }
+    if ($request['event_location_note']) {
+        $waPhoto .= "📍 *Venue:* " . $request['event_location_note'] . "\n";
+    }
+    if ($photoDetails['note']) {
+        $waPhoto .= "\n📝 *Notes:*\n" . $photoDetails['note'] . "\n";
+    }
+    $waPhoto .= "\n" . $waSep;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 $pageTitle = "Request " . e($request['reference_no']) . " | CDM Admin";
 include __DIR__ . "/partials/header.php";
 ?>
@@ -194,7 +373,50 @@ include __DIR__ . "/partials/header.php";
           <?php endif; ?>
         </div>
       </div>
-      <div class="flex items-center gap-3 shrink-0">
+      <div class="flex items-center gap-3 shrink-0" x-data="{ waCopyOpen: false }">
+
+        <!-- Copy for WhatsApp dropdown -->
+        <div class="relative">
+          <button @click="waCopyOpen = !waCopyOpen" @click.outside="waCopyOpen = false"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 text-sm font-medium text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors">
+            <i class="fa-brands fa-whatsapp text-base"></i>
+            <span class="hidden sm:inline">Copy for WA</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div x-show="waCopyOpen" x-transition:enter="transition ease-out duration-100"
+               x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+               x-transition:leave="transition ease-in duration-75"
+               x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+               class="absolute right-0 mt-1 w-56 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-20 py-1 origin-top-right">
+            <button @click="copyWaText('full'); waCopyOpen = false"
+                    class="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors">
+              <i class="fa-solid fa-clipboard-list text-slate-400 w-4 text-center"></i>
+              Full Summary
+            </button>
+            <?php if ($waAV): ?>
+            <button @click="copyWaText('av'); waCopyOpen = false"
+                    class="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors">
+              <i class="fa-solid fa-headphones text-purple-400 w-4 text-center"></i>
+              AV Support only
+            </button>
+            <?php endif; ?>
+            <?php if ($waMedia): ?>
+            <button @click="copyWaText('media'); waCopyOpen = false"
+                    class="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors">
+              <i class="fa-solid fa-photo-film text-green-400 w-4 text-center"></i>
+              Poster / Design only
+            </button>
+            <?php endif; ?>
+            <?php if ($waPhoto): ?>
+            <button @click="copyWaText('photo'); waCopyOpen = false"
+                    class="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors">
+              <i class="fa-solid fa-camera text-blue-400 w-4 text-center"></i>
+              Photography only
+            </button>
+            <?php endif; ?>
+          </div>
+        </div>
+
         <span class="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold <?php echo approval_status_classes($request['request_status']); ?>">
           <?php echo approval_status_label($request['request_status']); ?>
         </span>
@@ -700,5 +922,40 @@ include __DIR__ . "/partials/header.php";
   </div><!-- /Two Column Grid -->
 
 </main>
+
+<!-- WhatsApp Copy Toast -->
+<div id="waCopyToast"
+     class="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-semibold text-white shadow-lg pointer-events-none
+            transition-all duration-300 opacity-0 translate-y-2">
+  <i class="fa-brands fa-whatsapp text-base"></i>
+  Copied for WhatsApp!
+</div>
+
+<script>
+const waTexts = {
+  full:  <?php echo json_encode($waFull); ?>,
+  av:    <?php echo json_encode($waAV); ?>,
+  media: <?php echo json_encode($waMedia); ?>,
+  photo: <?php echo json_encode($waPhoto); ?>,
+};
+
+function copyWaText(key) {
+  const text = waTexts[key];
+  if (!text) return;
+  navigator.clipboard.writeText(text)
+    .then(() => showWaToast())
+    .catch(() => alert('Unable to copy — please copy manually.'));
+}
+
+function showWaToast() {
+  const toast = document.getElementById('waCopyToast');
+  toast.classList.remove('opacity-0', 'translate-y-2');
+  toast.classList.add('opacity-100', 'translate-y-0');
+  setTimeout(() => {
+    toast.classList.add('opacity-0', 'translate-y-2');
+    toast.classList.remove('opacity-100', 'translate-y-0');
+  }, 2200);
+}
+</script>
 
 <?php include __DIR__ . "/partials/footer.php"; ?>
